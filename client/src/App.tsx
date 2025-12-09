@@ -2,15 +2,31 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { PATHS } from "./config/paths";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import CheckEmail from "./pages/CheckEmail";
+import VerifyEmail from "./pages/VerifyEmail";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import ResendVerification from "./pages/ResendVerification";
 import { Toaster } from "react-hot-toast";
+import PublicRoute from "./components/ui/PublicRoute";
+import useAuthStore from "./stores/auth.store";
+import { useEffect } from "react";
+import ProtectedRoute from "./components/ui/ProtectedRoute";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
+  const { fetchCurrentUser } = useAuthStore();
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, []);
+
   return (
     <BrowserRouter>
       <Toaster
         position="top-right"
         toastOptions={{
-          duration: 4000,
+          duration: 3000,
           style: {
             background: "oklch(0.15 0.01 264.376)",
             color: "oklch(0.985 0.003 264.376)",
@@ -46,8 +62,49 @@ function App() {
         }}
       />
       <Routes>
-        <Route path={PATHS.LOGIN} element={<Login />} />
-        <Route path={PATHS.REGISTER} element={<Register />} />
+        <Route
+          path={PATHS.LOGIN}
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path={PATHS.REGISTER}
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
+        <Route path={PATHS.CHECK_EMAIL} element={<CheckEmail />} />
+        <Route path={PATHS.VERIFY_EMAIL} element={<VerifyEmail />} />
+        <Route
+          path={PATHS.FORGOT_PASSWORD}
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          }
+        />
+        <Route path={PATHS.RESET_PASSWORD} element={<ResetPassword />} />
+        <Route
+          path={PATHS.RESEND_VERIFICATION}
+          element={
+            <PublicRoute>
+              <ResendVerification />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path={PATHS.DASHBOARD}
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
