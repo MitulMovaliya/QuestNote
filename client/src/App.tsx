@@ -8,11 +8,14 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ResendVerification from "./pages/ResendVerification";
 import { Toaster } from "react-hot-toast";
-import PublicRoute from "./components/ui/PublicRoute";
+import PublicRoute from "./components/PublicRoute";
 import useAuthStore from "./stores/auth.store";
 import { useEffect } from "react";
-import ProtectedRoute from "./components/ui/ProtectedRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
+import Notes from "./pages/Notes";
+import Tags from "./pages/Tags";
+import Archived from "./pages/Archived";
 
 function App() {
   const { fetchCurrentUser } = useAuthStore();
@@ -102,6 +105,30 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={PATHS.NOTES}
+          element={
+            <ProtectedRoute>
+              <Notes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={PATHS.ARCHIVED}
+          element={
+            <ProtectedRoute>
+              <Archived />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={PATHS.TAGS}
+          element={
+            <ProtectedRoute>
+              <Tags />
             </ProtectedRoute>
           }
         />
