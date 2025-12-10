@@ -40,7 +40,7 @@ const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   isLoading: false,
 
-  login: async (credentials: LoginCredentials) => {
+  login: async (credentials) => {
     try {
       set({ isLoading: true });
       const response = await authLogin(credentials);
@@ -80,7 +80,7 @@ const useAuthStore = create<AuthStore>((set, get) => ({
       set({ isLoading: false });
     }
   },
-  register: async (credentials: RegisterCredentials) => {
+  register: async (credentials) => {
     try {
       set({ isLoading: true });
       const response = await authRegister(credentials);
@@ -95,7 +95,7 @@ const useAuthStore = create<AuthStore>((set, get) => ({
       set({ isLoading: false });
     }
   },
-  emailVerification: async (token: string) => {
+  emailVerification: async (token) => {
     try {
       set({ isLoading: true });
       const response = await authEmailVerification(token);
@@ -108,7 +108,7 @@ const useAuthStore = create<AuthStore>((set, get) => ({
       set({ isLoading: false });
     }
   },
-  forgotPassword: async (email: string) => {
+  forgotPassword: async (email) => {
     try {
       set({ isLoading: true });
       const response = await authForgotPassword(email);
@@ -123,7 +123,7 @@ const useAuthStore = create<AuthStore>((set, get) => ({
       set({ isLoading: false });
     }
   },
-  resetPassword: async (token: string, newPassword: string) => {
+  resetPassword: async (token, newPassword) => {
     try {
       set({ isLoading: true });
       const response = await authResetPassword(token, newPassword);
@@ -136,7 +136,7 @@ const useAuthStore = create<AuthStore>((set, get) => ({
       set({ isLoading: false });
     }
   },
-  resendVerificationEmail: async (email: string) => {
+  resendVerificationEmail: async (email) => {
     try {
       set({ isLoading: true });
       const response = await authResendVerificationEmail(email);
