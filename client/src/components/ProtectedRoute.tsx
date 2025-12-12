@@ -1,10 +1,11 @@
 import { PATHS } from "@/config/paths";
 import useAuthStore from "@/stores/auth.store";
 import type React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuthStore();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -15,7 +16,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={PATHS.LOGIN} replace />;
+    // Save the full location including pathname and search params
+    return (
+      <Navigate
+        to={PATHS.LOGIN}
+        state={{ from: `${location.pathname}${location.search}` }}
+        replace
+      />
+    );
   }
 
   return <>{children}</>;
