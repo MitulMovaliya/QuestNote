@@ -157,6 +157,9 @@ export const togglePin = async (req, res) => {
     if (!note) {
       return res.status(404).json({ error: "Note not found" });
     }
+    if (note.isArchived) {
+      return res.status(400).json({ error: "Cannot pin an archived note" });
+    }
 
     note.isPinned = !note.isPinned;
     await note.save();
@@ -182,6 +185,7 @@ export const toggleArchive = async (req, res) => {
     }
 
     note.isArchived = !note.isArchived;
+    note.isPinned = note.isArchived ? false : note.isPinned;
     await note.save();
 
     res.status(200).json({
