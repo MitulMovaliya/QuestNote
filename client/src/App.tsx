@@ -9,8 +9,6 @@ import ResetPassword from "./pages/ResetPassword";
 import ResendVerification from "./pages/ResendVerification";
 import { Toaster } from "react-hot-toast";
 import PublicRoute from "./components/PublicRoute";
-import useAuthStore from "./stores/auth.store";
-import { useEffect } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Notes from "./pages/Notes";
@@ -18,12 +16,6 @@ import Tags from "./pages/Tags";
 import Archived from "./pages/Archived";
 
 function App() {
-  const { fetchCurrentUser } = useAuthStore();
-
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
-
   return (
     <BrowserRouter>
       <Toaster

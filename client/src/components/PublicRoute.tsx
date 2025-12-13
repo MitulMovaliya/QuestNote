@@ -1,11 +1,18 @@
 import { PATHS } from "@/config/paths";
 import useAuthStore from "@/stores/auth.store";
 import type React from "react";
+import { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading, fetchCurrentUser } = useAuthStore();
   const location = useLocation();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      fetchCurrentUser();
+    }
+  }, [fetchCurrentUser]);
 
   if (isLoading) {
     return (
@@ -16,7 +23,6 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated) {
-    // Redirect to the page they were trying to access (including query params), or dashboard as fallback
     const from = (location.state as any)?.from || PATHS.DASHBOARD;
     return <Navigate to={from} replace />;
   }
