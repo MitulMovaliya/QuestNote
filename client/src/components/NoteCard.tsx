@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "./ui/badge";
 
 interface NoteCardProps {
@@ -41,9 +41,24 @@ function NoteCard({ note, onEdit }: NoteCardProps) {
       <div className="flex justify-between items-start">
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-lg truncate">{note.title}</h3>
-          <p className="text-xs text-muted-foreground">
-            {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
-          </p>
+          <div className="group/time relative inline-block">
+            <p className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              {formatDistanceToNow(new Date(note.createdAt), {
+                addSuffix: true,
+              })}
+            </p>
+            <Badge
+              className="absolute bottom-full left-0 mb-2 px-3 py-1.5 text-xs 
+              bg-popover text-popover-foreground border shadow-lg
+              opacity-0 invisible group-hover/time:opacity-100 group-hover/time:visible 
+              transition-all duration-200 ease-in-out
+              whitespace-nowrap z-10 pointer-events-none
+              before:content-[''] before:absolute before:top-full before:left-4
+              before:border-4 before:border-transparent before:border-t-popover"
+            >
+              {format(new Date(note.createdAt), "dd MMM yyyy, h:mm a")}
+            </Badge>
+          </div>
         </div>
         <div className="flex items-center gap-1 ml-2">
           {note.isPinned && (
