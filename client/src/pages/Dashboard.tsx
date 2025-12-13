@@ -27,7 +27,14 @@ function Dashboard() {
   ).length;
   const archivedNotesCount = notes.filter((note) => note.isArchived).length;
   const recentNotes = notes.filter((note) => !note.isArchived).slice(0, 5);
-
+  const tagCount = tags
+    .map((tag) => {
+      const count = notes.filter(
+        (note) => note.tags.includes(tag) && !note.isArchived
+      ).length;
+      return count;
+    })
+    .filter((count) => count > 0).length;
   const cards = [
     {
       title: "Total Notes",
@@ -46,7 +53,7 @@ function Dashboard() {
     },
     {
       title: "Total Tags",
-      count: tags.length,
+      count: tagCount,
       icon: TagIcon,
     },
   ];

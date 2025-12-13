@@ -16,12 +16,15 @@ function Tags() {
     fetchNotes({ isArchived: false });
   }, [fetchTags, fetchNotes]);
 
-  const tagAndCounts = tags.map((tag) => {
-    const count = notes.filter(
-      (note) => note.tags.includes(tag) && !note.isArchived
-    ).length;
-    return { tag, count };
-  });
+  const tagAndCounts = tags
+    .map((tag) => {
+      const count = notes.filter(
+        (note) => note.tags.includes(tag) && !note.isArchived
+      ).length;
+      return { tag, count };
+    })
+    .filter(({ count }) => count > 0);
+
   return (
     <Layout>
       <div className="p-6 max-w-7xl mx-auto">
