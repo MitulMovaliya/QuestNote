@@ -22,6 +22,10 @@ const noteSchema = new mongoose.Schema(
         type: String,
         trim: true,
         lowercase: true,
+        validate: {
+          validator: (v) => /^[a-zA-Z0-9_-]+$/.test(v),
+          message: "Tag must be one word with no spaces",
+        },
       },
     ],
     user: {

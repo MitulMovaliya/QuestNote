@@ -9,6 +9,22 @@ export const createNote = async (req, res) => {
       return res.status(400).json({ error: "Title and content are required" });
     }
 
+    if (tags) {
+      if (!Array.isArray(tags)) {
+        return res.status(400).json({ error: "Tags must be an array" });
+      }
+      for (const tag of tags) {
+        if (typeof tag !== "string") {
+          return res.status(400).json({ error: "Each tag must be a string" });
+        }
+        if (!/^[a-zA-Z0-9_-]+$/.test(tag)) {
+          return res
+            .status(400)
+            .json({ error: "Tag must be one word with no spaces" });
+        }
+      }
+    }
+
     const note = await Note.create({
       title,
       content,
