@@ -31,7 +31,7 @@ interface NoteStore {
   deleteNote: (id: string) => Promise<void>;
   pinNote: (id: string) => Promise<void>;
   archiveNote: (id: string) => Promise<void>;
-  fetchTags: () => Promise<string[]>;
+  fetchTags: () => Promise<void>;
 }
 
 export const useNoteStore = create<NoteStore>((set, get) => ({
@@ -157,12 +157,9 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
 
   fetchTags: async () => {
     try {
-      set({ isLoading: true });
       const response = await getAllTags();
       set({ tags: response.tags, isLoading: false });
-      return response.tags;
     } catch (error: any) {
-      set({ isLoading: false });
       toast.error(error.response?.data?.error || "Failed to fetch tags.");
       throw error;
     }
