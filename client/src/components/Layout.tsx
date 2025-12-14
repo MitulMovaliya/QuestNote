@@ -29,7 +29,7 @@ function Layout({ children }: { children: React.ReactNode }) {
     { name: "Tags", path: PATHS.TAGS },
   ];
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="   flex bg-background overflow-hidden">
       <aside
         className={`${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
