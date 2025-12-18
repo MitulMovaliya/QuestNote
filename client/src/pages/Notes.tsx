@@ -1,5 +1,6 @@
 import Layout from "@/components/Layout";
 import NoteCard from "@/components/NoteCard";
+import NoteModel from "@/components/NoteModel";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useNoteStore } from "@/stores/note.store";
+import type { Note } from "@/types";
 import { Filter, Loader2, Plus, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -20,8 +22,9 @@ function Notes() {
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [localLoading, setLocalLoading] = useState(true);
-
+  const [isModelOpen, setIsModelOpen] = useState(false);
   const [searchParams] = useSearchParams();
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
   useEffect(() => {
     const tagParam = searchParams.get("tag");
@@ -47,7 +50,18 @@ function Notes() {
     return () => clearTimeout(delayDebounceFn);
   }, [search, selectedTags, fetchNotes]);
 
-  const onEdit = () => {};
+  const onEdit = (note: Note) => {
+    setSelectedNote(note);
+    setIsModelOpen(true);
+  };
+  const onCloseModel = () => {
+    setSelectedNote(null);
+    setIsModelOpen(false);
+  };
+  const onCreate = () => {
+    setSelectedNote(null);
+    setIsModelOpen(true);
+  };
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
@@ -64,7 +78,7 @@ function Notes() {
       <div className="p-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">My Notes</h1>
-          <Button>
+          <Button onClick={onCreate}>
             <Plus className="mr-2 h-4 w-4" />
             New Note
           </Button>
@@ -156,6 +170,11 @@ function Notes() {
             ) : null}
           </>
         )}
+        <NoteModel
+          isOpen={isModelOpen}
+          note={selectedNote}
+          onClose={onCloseModel}
+        />
       </div>
     </Layout>
   );

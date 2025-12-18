@@ -80,7 +80,7 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
       return response.note;
     } catch (error: any) {
       set({ isLoading: false });
-      toast.error(error.response?.data?.error || "Failed to fetch note.");
+      // toast.error(error.response?.data?.error || "Failed to fetch note.");
       throw error;
     }
   },

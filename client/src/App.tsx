@@ -14,6 +14,8 @@ import Dashboard from "./pages/Dashboard";
 import Notes from "./pages/Notes";
 import Tags from "./pages/Tags";
 import Archived from "./pages/Archived";
+import NotePage from "./pages/NotePage";
+import NoteFound from "./pages/NoteFound";
 
 function App() {
   return (
@@ -124,6 +126,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path={`${PATHS.NOTE}/:id`} element={<NotePage />} />
+        <Route path="*" element={<NoteFound />} />
       </Routes>
     </BrowserRouter>
   );

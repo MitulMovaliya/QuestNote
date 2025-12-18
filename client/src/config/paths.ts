@@ -11,4 +11,5 @@ export const PATHS = {
   NOTES: "/notes",
   ARCHIVED: "/archived",
   TAGS: "/tags",
+  NOTE: "/note",
 } as const;

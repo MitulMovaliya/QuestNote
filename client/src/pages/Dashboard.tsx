@@ -12,10 +12,12 @@ import {
   TagIcon,
 } from "lucide-react";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Dashboard() {
   const { fetchNotes, notes, isLoading, tags, fetchTags } = useNoteStore();
   const { user } = useAuthStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchNotes();
@@ -96,7 +98,11 @@ function Dashboard() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Recent Notes</CardTitle>
-                  <Button variant="ghost" size="sm">
+                  <Button
+                    onClick={() => navigate("/notes")}
+                    variant="ghost"
+                    size="sm"
+                  >
                     View All
                   </Button>
                 </div>
@@ -111,6 +117,7 @@ function Dashboard() {
                     {recentNotes.map((note) => (
                       <div
                         key={note._id}
+                        onClick={() => navigate(`/note/${note._id}`)}
                         className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors"
                       >
                         <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />

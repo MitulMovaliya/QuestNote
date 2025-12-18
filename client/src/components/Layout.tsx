@@ -114,7 +114,7 @@ function Layout({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-card border-b border-border p-4 lg:hidden">
+        <header className="bg-card border-b border-border p-4 h-16 lg:hidden">
           <Button
             variant="ghost"
             size="icon"

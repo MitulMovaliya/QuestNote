@@ -19,6 +19,7 @@ import {
 } from "./ui/dropdown-menu";
 import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "./ui/badge";
+import { useNavigate } from "react-router-dom";
 
 interface NoteCardProps {
   note: Note;
@@ -26,8 +27,8 @@ interface NoteCardProps {
 }
 
 function NoteCard({ note, onEdit }: NoteCardProps) {
-  const { pinNote, archiveNote } = useNoteStore();
-
+  const { pinNote, archiveNote, deleteNote } = useNoteStore();
+  const navigate = useNavigate();
   const togglePin = () => {
     pinNote(note._id);
   };
@@ -36,8 +37,15 @@ function NoteCard({ note, onEdit }: NoteCardProps) {
   };
   const { isArchived } = note;
 
+  const handleDelete = () => {
+    deleteNote(note._id);
+  };
+
   return (
-    <Card className={`p-4 hover:border-primary/50 transition-colors `}>
+    <Card
+      onClick={() => navigate(`/note/${note._id}`)}
+      className={`p-4 hover:border-primary/50 transition-colors `}
+    >
       <div className="flex justify-between items-start">
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-lg truncate">{note.title}</h3>
@@ -60,7 +68,10 @@ function NoteCard({ note, onEdit }: NoteCardProps) {
             </Badge>
           </div>
         </div>
-        <div className="flex items-center gap-1 ml-2">
+        <div
+          className="flex items-center gap-1 ml-2"
+          onClick={(e) => e.stopPropagation()}
+        >
           {note.isPinned && (
             <Pin className="h-4 w-4 text-primary fill-primary" />
           )}
@@ -74,24 +85,45 @@ function NoteCard({ note, onEdit }: NoteCardProps) {
             <DropdownMenuContent align="end">
               {isArchived ? null : (
                 <>
-                  <DropdownMenuItem onClick={() => onEdit(note)}>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(note);
+                    }}
+                  >
                     <Edit className="mr-2 h-4 w-4" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={togglePin}>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePin();
+                    }}
+                  >
                     <Pin className="mr-2 h-4 w-4" />
                     {note.isPinned ? "Unpin" : "Pin"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem onClick={toggleArchive}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleArchive();
+                }}
+              >
                 <Archive className="mr-2 h-4 w-4" />
                 {note.isArchived ? "Unarchive" : "Archive"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive hover:bg-destructive/30!">
+              <DropdownMenuItem
+                className="text-destructive hover:bg-destructive/30!"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete();
+                }}
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
@@ -107,6 +139,7 @@ function NoteCard({ note, onEdit }: NoteCardProps) {
           href={note.link}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
           className="flex items-center text-xs text-primary hover:underline mb-3"
         >
           <ExternalLink className="h-3 w-3 mr-1" />
