@@ -126,7 +126,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path={`${PATHS.NOTE}/:id`} element={<NotePage />} />
+        <Route
+          path={`${PATHS.NOTE}/:id`}
+          element={
+            <ProtectedRoute>
+              <NotePage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NoteFound />} />
       </Routes>
     </BrowserRouter>
