@@ -2,7 +2,7 @@ import Layout from "@/components/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNoteStore } from "@/stores/note.store";
-import type { Note } from "@/types";
+import type { Message, Note } from "@/types";
 import {
   Archive,
   Bot,
@@ -19,11 +19,8 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Textarea } from "@/components/ui/textarea";
-
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
+import { useMessageStore } from "@/stores/message.store";
+import { Input } from "@/components/ui/input";
 
 function NotePage() {
   const { id } = useParams<{ id: string }>();
@@ -32,10 +29,15 @@ function NotePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAiChatOpen, setAiChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
-  const [isSending, setIsSending] = useState(false);
   const scrollToDown = useRef<HTMLDivElement>(null);
 
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
+  const {
+    fetchMessages,
+    sendMessage,
+    messages,
+    isLoading: isSending,
+  } = useMessageStore();
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -52,15 +54,19 @@ function NotePage() {
         }
       }
     };
-    setChatMessages([
-      {
-        role: "assistant",
-        content:
-          "Hi! I'm here to help you with this note. What would you like to know?",
-      },
-    ]);
+
+    const fetchMessage = async () => {
+      if (id) {
+        try {
+          await fetchMessages(id);
+        } catch (error) {
+          console.error("Failed to load messages:", error);
+        }
+      }
+    };
     fetchNote();
-  }, [id, fetchNoteById]);
+    fetchMessage();
+  }, [id, fetchNoteById, fetchMessages]);
 
   const handleScrollToBottom = () => {
     if (scrollToDown.current) {
@@ -69,36 +75,32 @@ function NotePage() {
   };
 
   useEffect(() => {
+    setChatMessages(messages);
+    if (messages.length == 0) {
+      setChatMessages([
+        {
+          role: "assistant",
+          content: "Hello! How can I assist you with this note?",
+        },
+      ]);
+    }
+  }, [messages]);
+
+  useEffect(() => {
     handleScrollToBottom();
   }, [chatMessages]);
 
   const handleSendMessage = async () => {
     if (!chatInput.trim() || isSending) return;
 
-    const userMessage: ChatMessage = {
-      role: "user",
-      content: chatInput.trim(),
-    };
-
-    setChatMessages((prev) => [...prev, userMessage]);
     setChatInput("");
-    setIsSending(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (!id) return;
 
-      const aiResponse: ChatMessage = {
-        role: "assistant",
-        content:
-          "This is a placeholder response. Integrate with your AI backend to get real responses about the note.",
-      };
-
-      setChatMessages((prev) => [...prev, aiResponse]);
+      await sendMessage(id, chatInput.trim());
     } catch (error) {
       toast.error("Failed to send message");
-      console.error(error);
-    } finally {
-      setIsSending(false);
     }
   };
 
@@ -108,6 +110,16 @@ function NotePage() {
       year: "numeric",
       month: "long",
       day: "numeric",
+    });
+  };
+
+  const renderMessageWithBold = (text: string) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return <strong key={index}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
     });
   };
 
@@ -261,7 +273,7 @@ function NotePage() {
                         : "bg-secondary text-secondary-foreground"
                     } whitespace-pre-wrap max-w-[75%] py-2.5 px-4 rounded-2xl shadow-sm`}
                   >
-                    {msg.content}
+                    {renderMessageWithBold(msg.content)}
                   </div>
                 </div>
               ))}
@@ -289,11 +301,17 @@ function NotePage() {
 
             <div className="flex gap-2 px-5 py-4 border-t border-border relative">
               <Textarea
-                rows={2}
+                rows={1}
                 className="flex-1 bg-accent! resize-none overflow-y-auto scrollbar-thin max-h-[40vh]"
                 placeholder="Ask about this note..."
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
                 disabled={isSending}
               />
               <button

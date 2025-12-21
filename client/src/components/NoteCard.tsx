@@ -20,6 +20,17 @@ import {
 import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "./ui/badge";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 
 interface NoteCardProps {
   note: Note;
@@ -29,6 +40,8 @@ interface NoteCardProps {
 function NoteCard({ note, onEdit }: NoteCardProps) {
   const { pinNote, archiveNote, deleteNote } = useNoteStore();
   const navigate = useNavigate();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const togglePin = () => {
     pinNote(note._id);
   };
@@ -39,6 +52,7 @@ function NoteCard({ note, onEdit }: NoteCardProps) {
 
   const handleDelete = () => {
     deleteNote(note._id);
+    setIsDeleteDialogOpen(false);
   };
 
   return (
@@ -121,7 +135,7 @@ function NoteCard({ note, onEdit }: NoteCardProps) {
                 className="text-destructive hover:bg-destructive/30!"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDelete();
+                  setIsDeleteDialogOpen(true);
                 }}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -131,6 +145,36 @@ function NoteCard({ note, onEdit }: NoteCardProps) {
           </DropdownMenu>
         </div>
       </div>
+
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Note?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete "
+              {note.title}" and remove it from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete();
+              }}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
         {note.content}
       </p>

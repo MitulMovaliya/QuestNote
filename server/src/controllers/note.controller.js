@@ -1,4 +1,7 @@
+import { collectionn } from "../config/chromadb.js";
+import { Message } from "../models/message.model.js";
 import { Note } from "../models/note.model.js";
+import { getEmbeddings } from "../utils/embedding.js";
 import logger from "../utils/logger.js";
 
 export const createNote = async (req, res) => {
@@ -31,6 +34,20 @@ export const createNote = async (req, res) => {
       link,
       tags: tags || [],
       user: req.user._id,
+    });
+
+    const embeddings = await getEmbeddings(note.content);
+
+    await collectionn.upsert({
+      ids: [note._id.toString()],
+      embeddings: [embeddings],
+      metadatas: [
+        {
+          userId: req.user._id.toString(),
+          noteId: note._id.toString(),
+          createdAt: new Date().toISOString(),
+        },
+      ],
     });
 
     res.status(201).json({
@@ -137,6 +154,21 @@ export const updateNote = async (req, res) => {
 
     await note.save();
 
+    if (content !== undefined) {
+      const embeddings = await getEmbeddings(note.content);
+      await collectionn.upsert({
+        ids: [note._id.toString()],
+        embeddings: [embeddings],
+        metadatas: [
+          {
+            userId: req.user._id.toString(),
+            noteId: note._id.toString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ],
+      });
+    }
+
     res.status(200).json({
       message: "Note updated successfully",
       note,
@@ -156,6 +188,11 @@ export const deleteNote = async (req, res) => {
     if (!note) {
       return res.status(404).json({ error: "Note not found" });
     }
+    await collectionn.delete({
+      ids: [note._id.toString()],
+      where: { userId: req.user._id.toString() },
+    });
+    await Message.deleteMany({ note: note._id });
 
     res.status(200).json({ message: "Note deleted successfully" });
   } catch (error) {

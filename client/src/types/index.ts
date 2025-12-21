@@ -66,3 +66,12 @@ export interface PaginationParams {
   isPinned?: boolean;
   isArchived?: boolean;
 }
+
+export interface Message {
+  content: string;
+  role: "user" | "assistant";
+}
+
+export interface MessageReq {
+  message: string;
+}

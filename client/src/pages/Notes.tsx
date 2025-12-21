@@ -162,7 +162,7 @@ function Notes() {
             ) : pinnedNotes.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground mb-4">No notes found</p>
-                <Button onClick={() => {}}>
+                <Button onClick={onCreate}>
                   <Plus className="mr-2 h-4 w-4" />
                   Create your first note
                 </Button>
