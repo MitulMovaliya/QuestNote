@@ -255,7 +255,10 @@ export const toggleArchive = async (req, res) => {
 
 export const getTags = async (req, res) => {
   try {
-    const tags = await Note.distinct("tags", { user: req.user._id });
+    const tags = await Note.distinct("tags", {
+      user: req.user._id,
+      isArchived: false,
+    });
 
     res.status(200).json({ tags: tags.filter((tag) => tag) });
   } catch (error) {

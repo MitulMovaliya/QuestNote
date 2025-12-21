@@ -48,6 +48,7 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
         notes: [response.note, ...state.notes],
         isLoading: false,
       }));
+      get().fetchTags();
       toast.success(response.message || "Note created successfully.");
     } catch (error: any) {
       set({ isLoading: false });
@@ -95,6 +96,7 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
         ),
         isLoading: false,
       }));
+      get().fetchTags();
       toast.success(response.message || "Note updated successfully.");
     } catch (error: any) {
       set({ isLoading: false });
@@ -111,6 +113,7 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
         notes: state.notes.filter((note) => note._id !== id),
         isLoading: false,
       }));
+      get().fetchTags();
       toast.success(response.message || "Note deleted successfully.");
     } catch (error: any) {
       set({ isLoading: false });
@@ -147,6 +150,7 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
         ),
         isLoading: false,
       }));
+      get().fetchTags();
       toast.success(response.message || "Note archive status updated.");
     } catch (error: any) {
       set({ isLoading: false });
