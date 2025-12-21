@@ -20,17 +20,17 @@ import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { useMessageStore } from "@/stores/message.store";
-import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 function NotePage() {
   const { id } = useParams<{ id: string }>();
-  const { fetchNoteById } = useNoteStore();
+  const { fetchNoteById, notes, fetchNotes } = useNoteStore();
   const [note, setNote] = useState<Note | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAiChatOpen, setAiChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const scrollToDown = useRef<HTMLDivElement>(null);
-
+  const [isChecked, setIsChecked] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const {
     fetchMessages,
@@ -44,12 +44,18 @@ function NotePage() {
       if (id) {
         try {
           setIsLoading(true);
-          const res = await fetchNoteById(id);
-          setNote(res);
+          const cachedNote = notes.find((n) => n._id === id);
+          if (cachedNote) {
+            setNote(cachedNote);
+            setIsLoading(false);
+          } else {
+            const res = await fetchNoteById(id);
+            setNote(res);
+            fetchNotes({ isArchived: false });
+            setIsLoading(false);
+          }
         } catch (error) {
           toast.error("Failed to load note");
-          console.error(error);
-        } finally {
           setIsLoading(false);
         }
       }
@@ -97,8 +103,12 @@ function NotePage() {
 
     try {
       if (!id) return;
-
-      await sendMessage(id, chatInput.trim());
+      if (isChecked) {
+        // Include relevant notes API Call
+        console.log("API CALLED");
+      } else {
+        await sendMessage(id, chatInput.trim());
+      }
     } catch (error) {
       toast.error("Failed to send message");
     }
@@ -299,32 +309,53 @@ function NotePage() {
               <div ref={scrollToDown} />
             </div>
 
-            <div className="flex gap-2 px-5 py-4 border-t border-border relative">
-              <Textarea
-                rows={1}
-                className="flex-1 bg-accent! resize-none overflow-y-auto scrollbar-thin max-h-[40vh]"
-                placeholder="Ask about this note..."
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                disabled={isSending}
-              />
-              <button
-                className="shrink-0 absolute right-6 bottom-5 p-2 rounded-full bg-primary text-white cursor-pointer transition disabled:cursor-auto disabled:opacity-50 not-disabled:hover:bg-primary/80"
-                onClick={handleSendMessage}
-                disabled={isSending || !chatInput.trim()}
-              >
-                {isSending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </button>
+            <div className="border-t border-border">
+              {notes.length > 1 && (
+                <div className="px-5 pt-3 flex gap-2 items-center text-sm">
+                  <Checkbox
+                    id="include-notes"
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    checked={isChecked}
+                    onCheckedChange={(checked) =>
+                      setIsChecked(checked === true)
+                    }
+                  />
+                  <label
+                    htmlFor="include-notes"
+                    className="text-muted-foreground cursor-pointer select-none"
+                  >
+                    Include relevant notes in this conversation
+                  </label>
+                </div>
+              )}
+
+              <div className="px-5 py-4 flex gap-2 relative">
+                <Textarea
+                  rows={1}
+                  className="flex-1 bg-accent! resize-none overflow-y-auto scrollbar-thin max-h-[40vh]"
+                  placeholder="Ask about this note..."
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  disabled={isSending}
+                />
+                <button
+                  className="shrink-0 absolute right-6 bottom-5 p-2 rounded-full bg-primary text-white cursor-pointer transition disabled:cursor-auto disabled:opacity-50 not-disabled:hover:bg-primary/80"
+                  onClick={handleSendMessage}
+                  disabled={isSending || !chatInput.trim()}
+                >
+                  {isSending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}

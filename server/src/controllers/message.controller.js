@@ -144,6 +144,12 @@ export const getAllMessages = async (req, res) => {
     if (!note) {
       return res.status(404).json({ error: "Note not found" });
     }
+    if (note.isArchived) {
+      return res.status(200).json({
+        messages: [],
+        message: "Note is archived, no messages available",
+      });
+    }
 
     const messages = await Message.find({
       note: noteId,
