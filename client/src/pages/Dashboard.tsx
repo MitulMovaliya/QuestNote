@@ -1,17 +1,39 @@
 import Layout from "@/components/Layout";
+import NoteModel from "@/components/NoteModel";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import useAuthStore from "@/stores/auth.store";
 import { useNoteStore } from "@/stores/note.store";
+import type { Note } from "@/types";
 import {
   Archive,
+  Edit,
   FileText,
   Loader2,
+  MoreVertical,
   Pin,
   StickyNote,
   TagIcon,
+  Trash2,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Dashboard() {
@@ -59,6 +81,21 @@ function Dashboard() {
       icon: TagIcon,
     },
   ];
+
+  const [isEditModelOpen, setIsEditModelOpen] = useState(false);
+  const [noteToEdit, setNoteToEdit] = useState<Note | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { pinNote, archiveNote, deleteNote } = useNoteStore();
+  const togglePin = (note: Note) => {
+    pinNote(note._id);
+  };
+  const toggleArchive = (note: Note) => {
+    archiveNote(note._id);
+  };
+  const handleDelete = (note: Note) => {
+    deleteNote(note._id);
+    setIsDeleteDialogOpen(false);
+  };
 
   return (
     <Layout>
@@ -114,25 +151,122 @@ function Dashboard() {
                   </p>
                 ) : (
                   <div className="space-y-4">
-                    {recentNotes.map((note) => (
-                      <div
-                        key={note._id}
-                        onClick={() => navigate(`/note/${note._id}`)}
-                        className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                      >
-                        <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    {recentNotes.map((note) => {
+                      const isArchived = note.isArchived;
+                      return (
+                        <div
+                          key={note._id}
+                          onClick={() => navigate(`/note/${note._id}`)}
+                          className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                        >
+                          <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
 
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium truncate">{note.title}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-1">
-                            {note.content}
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium truncate">
+                              {note.title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground line-clamp-1">
+                              {note.content}
+                            </p>
+                          </div>
+                          {note.isPinned && (
+                            <Pin className="h-4 w-4 text-primary fill-primary" />
+                          )}
+                          <div className="self-center">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  onClick={(e) => e.stopPropagation()}
+                                  size="icon"
+                                  variant={"ghost"}
+                                >
+                                  <MoreVertical className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start" side="left">
+                                {isArchived ? null : (
+                                  <>
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setNoteToEdit(note);
+                                        setIsEditModelOpen(true);
+                                      }}
+                                    >
+                                      <Edit className="mr-2 h-4 w-4" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        togglePin(note);
+                                      }}
+                                    >
+                                      <Pin className="mr-2 h-4 w-4" />
+                                      {note.isPinned ? "Unpin" : "Pin"}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                  </>
+                                )}
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleArchive(note);
+                                  }}
+                                >
+                                  <Archive className="mr-2 h-4 w-4" />
+                                  {note.isArchived ? "Unarchive" : "Archive"}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive hover:bg-destructive/30!"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNoteToEdit(note);
+                                    setIsDeleteDialogOpen(true);
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
-                        {note.isPinned && (
-                          <Pin className="h-4 w-4 text-primary fill-primary" />
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
+                    <AlertDialog
+                      open={isDeleteDialogOpen}
+                      onOpenChange={setIsDeleteDialogOpen}
+                    >
+                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Note?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete "{noteToEdit?.title}" and remove it from our
+                            servers.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(noteToEdit!);
+                            }}
+                            className="bg-destructive hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 )}
               </CardContent>
@@ -140,6 +274,11 @@ function Dashboard() {
           </>
         )}
       </div>
+      <NoteModel
+        isOpen={isEditModelOpen}
+        onClose={() => setIsEditModelOpen(false)}
+        note={noteToEdit}
+      />
     </Layout>
   );
 }
