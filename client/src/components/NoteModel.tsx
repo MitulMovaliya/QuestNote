@@ -19,7 +19,7 @@ import { Loader2, X } from "lucide-react";
 interface NoteModelProps {
   isOpen: boolean;
   note?: Note | null;
-  onClose: () => void;
+  onClose: (shouldResetPage?: boolean) => void;
 }
 
 function NoteModel({ isOpen, note, onClose }: NoteModelProps) {
@@ -70,6 +70,7 @@ function NoteModel({ isOpen, note, onClose }: NoteModelProps) {
           tags,
         };
         await updateNote(note._id, updateData);
+        onClose();
       } else {
         const createData: NoteCreateData = {
           title,
@@ -78,8 +79,8 @@ function NoteModel({ isOpen, note, onClose }: NoteModelProps) {
           tags,
         };
         await createNote(createData);
+        onClose(true);
       }
-      onClose();
     } catch (error) {
       console.error("Failed to save note:", error);
     } finally {
@@ -175,7 +176,7 @@ function NoteModel({ isOpen, note, onClose }: NoteModelProps) {
             </div>
           </div>
           <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={() => onClose()}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>

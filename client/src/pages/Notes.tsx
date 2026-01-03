@@ -13,18 +13,26 @@ import {
 import { Input } from "@/components/ui/input";
 import { useNoteStore } from "@/stores/note.store";
 import type { Note } from "@/types";
-import { Filter, Loader2, Plus, Search } from "lucide-react";
+import {
+  Filter,
+  Loader2,
+  Plus,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 function Notes() {
-  const { notes, fetchNotes, fetchTags, tags } = useNoteStore();
+  const { notes, fetchNotes, fetchTags, tags, pagination } = useNoteStore();
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [localLoading, setLocalLoading] = useState(true);
   const [isModelOpen, setIsModelOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const tagParam = searchParams.get("tag");
@@ -44,19 +52,23 @@ function Notes() {
         search: search || undefined,
         tags: selectedTags.length > 0 ? selectedTags.join(",") : undefined,
         isArchived: false,
+        page: currentPage,
       }).finally(() => setLocalLoading(false));
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [search, selectedTags, fetchNotes]);
+  }, [search, selectedTags, currentPage, fetchNotes]);
 
   const onEdit = (note: Note) => {
     setSelectedNote(note);
     setIsModelOpen(true);
   };
-  const onCloseModel = () => {
+  const onCloseModel = (shouldResetPage?: boolean) => {
     setSelectedNote(null);
     setIsModelOpen(false);
+    if (shouldResetPage) {
+      setCurrentPage(1);
+    }
   };
   const onCreate = () => {
     setSelectedNote(null);
@@ -66,6 +78,12 @@ function Notes() {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const pinnedNotes = notes.filter((note) => note.isPinned && !note.isArchived);
@@ -75,7 +93,7 @@ function Notes() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="p-6 max-w-7xl mx-auto flex flex-col h-full">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">My Notes</h1>
           <Button onClick={onCreate}>
@@ -147,7 +165,7 @@ function Notes() {
               </div>
             )}
             {regularNotes.length > 0 ? (
-              <div>
+              <div className="flex-1">
                 {pinnedNotes.length > 0 && (
                   <h2 className="text-lg font-semibold mb-4 text-muted-foreground">
                     All Notes
@@ -168,6 +186,83 @@ function Notes() {
                 </Button>
               </div>
             ) : null}
+
+            <div>
+              {pagination.pages > 1 && (
+                <div className="mt-8 flex items-center justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from(
+                      { length: pagination.pages },
+                      (_, i) => i + 1
+                    ).map((page) => {
+                      const showPage =
+                        page === 1 ||
+                        page === pagination.pages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1);
+
+                      const showEllipsisBefore =
+                        page === currentPage - 2 && currentPage > 3;
+                      const showEllipsisAfter =
+                        page === currentPage + 2 &&
+                        currentPage < pagination.pages - 2;
+
+                      if (showEllipsisBefore || showEllipsisAfter) {
+                        return (
+                          <span
+                            key={page}
+                            className="px-2 text-muted-foreground"
+                          >
+                            ...
+                          </span>
+                        );
+                      }
+
+                      if (!showPage) return null;
+
+                      return (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(page)}
+                          className="min-w-[40px]"
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === pagination.pages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              {notes.length > 0 && (
+                <div className="mt-4 text-center text-sm text-muted-foreground">
+                  Showing {(currentPage - 1) * pagination.limit + 1} to{" "}
+                  {Math.min(currentPage * pagination.limit, pagination.total)}{" "}
+                  of {pagination.total} notes
+                </div>
+              )}
+            </div>
           </>
         )}
         <NoteModel

@@ -23,6 +23,7 @@ interface NoteStore {
   pagination: PaginationResponse;
   isLoading: boolean;
   tags: string[];
+  currentParams: PaginationParams | undefined;
 
   createNote: (data: NoteCreateData) => Promise<void>;
   fetchNotes: (params?: PaginationParams) => Promise<void>;
@@ -39,17 +40,18 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
   pagination: { total: 0, page: 1, limit: 10, pages: 0 },
   isLoading: false,
   tags: [],
+  currentParams: undefined,
 
   createNote: async (data) => {
     try {
       set({ isLoading: true });
       const response = await createNote(data);
-      set((state) => ({
-        notes: [response.note, ...state.notes],
-        isLoading: false,
-      }));
+      set({ isLoading: false });
       get().fetchTags();
       toast.success(response.message || "Note created successfully.");
+      // Refetch notes on page 1 to show the new note
+      const params = get().currentParams;
+      await get().fetchNotes({ ...params, page: 1 });
     } catch (error: any) {
       set({ isLoading: false });
       toast.error(error.response?.data?.error || "Failed to create note.");
@@ -59,7 +61,7 @@ export const useNoteStore = create<NoteStore>((set, get) => ({
 
   fetchNotes: async (params?) => {
     try {
-      set({ isLoading: true });
+      set({ isLoading: true, currentParams: params });
       const response = await getAllNotes(params);
       set({
         notes: response.notes,
