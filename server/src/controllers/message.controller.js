@@ -10,6 +10,7 @@ export const messageConversation = async (req, res) => {
   try {
     const { noteId } = req.params;
     const { message } = req.body;
+    const { isSimilarity } = req.query;
 
     if (!message || message.trim() === "") {
       return res.status(400).json({ error: "Message content is required" });
@@ -45,89 +46,146 @@ export const messageConversation = async (req, res) => {
       role: "user",
     });
 
-    const recentMessages = await Message.find({
-      note: noteId,
-      user: req.user._id,
-    })
-      .sort({ createdAt: -1 })
-      .limit(10);
+    try {
+      const recentMessages = await Message.find({
+        note: noteId,
+        user: req.user._id,
+      })
+        .sort({ createdAt: -1 })
+        .limit(10);
 
-    const conversationHistory = recentMessages
-      .reverse()
-      .map(
-        (msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`
-      )
-      .join("\n");
+      const conversationHistory = recentMessages
+        .reverse()
+        .map(
+          (msg) =>
+            `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`
+        )
+        .join("\n");
 
-    //     const systemInstruction = `You are an intelligent AI assistant helping users understand and analyze their notes. Your role is to:
-    // - Answer questions about the note content
-    // - Provide insights, summaries, and explanations
-    // - Help clarify concepts mentioned in the note
-    // - Suggest connections and related ideas
-    // - Be concise, helpful, and conversational
-    // - If the question is unrelated to the note, politely redirect to note-related topics
+      let systemInstruction;
+      if (isSimilarity) {
+        const queryEmbedding = await getEmbeddings(note.content);
 
-    // Current Note Context:
-    // Title: ${note.title}
-    // Content: ${note.content}
-    // ${note.tags && note.tags.length > 0 ? `Tags: ${note.tags.join(", ")}` : ""}
+        const similarNote = await collectionn.query({
+          queryEmbeddings: [queryEmbedding],
+          nResults: 2,
+          where: {
+            userId: req.user._id.toString(),
+          },
+        });
+        const filteredResults = similarNote.ids[0]
+          .map((id, index) => {
+            if (id === noteId) return null;
+            return {
+              id: id,
+              similarity: 1 - similarNote.distances?.[0]?.[index],
+              metadata: similarNote.metadatas?.[0]?.[index],
+            };
+          })
+          .filter((item) => item !== null)
+          .filter((item) => item.similarity > 0.5);
 
-    // Previous Conversation:
-    // ${conversationHistory}
+        let similarNoteInstruction;
 
-    // Now respond to the user's latest message naturally and helpfully.`;
+        if (filteredResults.length === 0) {
+          similarNoteInstruction = `No related notes found. Focus only on the current note.`;
+        } else {
+          const similarNoteId = filteredResults[0].metadata.noteId;
 
-    const systemInstruction = `You're a friendly AI assistant helping with this note.
+          const similarNoteData = await Note.findOne({
+            _id: similarNoteId,
+            user: req.user._id,
+          });
+
+          similarNoteInstruction = `**Related Note Found:**
+  Title: "${similarNoteData.title}"
+  Content: ${similarNoteData.content.substring(0, 500)}${
+            similarNoteData.content.length > 500 ? "..." : ""
+          }
+  ${
+    similarNoteData.tags?.length > 0
+      ? `Tags: ${similarNoteData.tags.join(", ")}`
+      : ""
+  }`;
+
+          systemInstruction = `You are a precise note assistant. Answer questions using ONLY the provided notes.
+
+**Current Note:** "${note.title}"
+${note.content}
+${note.tags?.length > 0 ? `Tags: ${note.tags.join(", ")}` : ""}
+
+${similarNoteInstruction}
+
+**Conversation:**
+${conversationHistory}
+
+**Rules:**
+1. Be CONCISE - max 2-3 sentences unless user asks for detail
+2. When referencing content, quote the relevant excerpt briefly so user can verify
+3. Format: Start with direct answer, then cite source if applicable
+4. If using the related note, mention: "From your note '${
+            similarNoteData.title
+          }':"
+5. Use **bold** for key terms only
+6. If question is unrelated to notes, say: "I can only help with your notes. Try asking about [note topic]."
+7. No emojis, no fluff, no repetition`;
+        }
+      } else {
+        systemInstruction = `You are a precise note assistant. Answer questions using ONLY this note.
 
 **Note:** "${note.title}"
 ${note.content}
-${note.tags && note.tags.length > 0 ? `Tags: ${note.tags.join(", ")}` : ""}
+${note.tags?.length > 0 ? `Tags: ${note.tags.join(", ")}` : ""}
 
+**Conversation:**
 ${conversationHistory}
 
-**Guidelines:**
-- Answer questions about the note clearly and briefly
-- Be warm and conversational (respond naturally to greetings)
-- **Use bold formatting** to highlight key terms, important concepts, and main points in your responses
-- If asked about unrelated topics, gently guide back to the note
-- Keep responses short unless detail is needed
-- Help connect ideas and clarify concepts
-- No Emojis or special characters
+**Rules:**
+1. Be CONCISE - max 2-3 sentences unless user asks for detail
+2. When referencing content, quote the relevant excerpt briefly so user can verify
+3. Format: Start with direct answer, then cite source: "Your note says: '...'"
+4. Use **bold** for key terms only
+5. If question is unrelated to the note, say: "I can only help with this note. Try asking about ${note.title.toLowerCase()}." 
+6. No emojis, no fluff, no repetition
+7. For greetings, respond briefly and ask how you can help with the note`;
+      }
 
-**Response Style:**
-Use **bold text** strategically to emphasize important words and phrases, making responses scannable and easy to read.`;
+      const openaiResponse = await openai.chat.completions.create({
+        model: "arcee-ai/trinity-mini:free",
+        messages: [
+          {
+            role: "system",
+            content: systemInstruction,
+          },
+          { role: "user", content: message },
+        ],
+        // max_tokens: 150,
+        temperature: 0.7,
+        top_p: 0.9,
+      });
 
-    const openaiResponse = await openai.chat.completions.create({
-      model: "arcee-ai/trinity-mini:free",
-      messages: [
-        {
-          role: "system",
-          content: systemInstruction,
-        },
-        { role: "user", content: message },
-      ],
-      // max_tokens: 150,
-      temperature: 0.7,
-      top_p: 0.9,
-    });
+      const aiResponseText =
+        openaiResponse.choices[0].message.content ||
+        "I apologize, but I couldn't generate a response. Please try again.";
 
-    const aiResponseText =
-      openaiResponse.choices[0].message.content ||
-      "I apologize, but I couldn't generate a response. Please try again.";
+      const assistantMessage = await Message.create({
+        note: noteId,
+        user: req.user._id,
+        content: aiResponseText,
+        role: "assistant",
+      });
 
-    const assistantMessage = await Message.create({
-      note: noteId,
-      user: req.user._id,
-      content: aiResponseText,
-      role: "assistant",
-    });
+      const responseMessage = {
+        content: assistantMessage.content,
+        role: assistantMessage.role,
+      };
 
-    const responseMessage = {
-      content: assistantMessage.content,
-      role: assistantMessage.role,
-    };
-
-    res.status(201).json({ message: responseMessage });
+      res.status(201).json({ message: responseMessage });
+    } catch (aiError) {
+      await Message.deleteOne({ _id: userMessage._id });
+      logger.error("AI processing error:", aiError);
+      throw aiError;
+    }
   } catch (error) {
     logger.error("Message conversation error:", error);
     res.status(500).json({ error: "Failed to process message" });
@@ -183,7 +241,7 @@ export const testingEmbeddings = async (req, res) => {
 
     const similarNote = await collectionn.query({
       queryEmbeddings: [queryEmbedding],
-      nResults: 6,
+      nResults: 2,
       where: {
         userId: req.user._id.toString(),
       },
@@ -195,11 +253,12 @@ export const testingEmbeddings = async (req, res) => {
         if (id === noteId) return null;
         return {
           id: id,
-          distance: similarNote.distances?.[0]?.[index],
+          similarity: 1 - similarNote.distances?.[0]?.[index],
           metadata: similarNote.metadatas?.[0]?.[index],
         };
       })
-      .filter((item) => item !== null);
+      .filter((item) => item !== null)
+      .filter((item) => item.similarity > 0.5);
 
     res.status(200).json({ embeddings: filteredResults });
   } catch (error) {

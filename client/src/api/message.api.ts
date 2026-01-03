@@ -12,11 +12,13 @@ export const getMessages = async (
 
 export const postMessage = async (
   noteId: string,
-  data: { message: string }
+  data: { message: string },
+  params?: { isSimilarity?: boolean }
 ): Promise<{ message: Message }> => {
   const response = await axiosInstance.post<{ message: Message }>(
     `/ai/chat/${noteId}`,
-    data
+    data,
+    { params }
   );
   return response.data;
 };

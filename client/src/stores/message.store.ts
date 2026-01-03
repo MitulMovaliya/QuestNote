@@ -8,7 +8,11 @@ interface MessageStore {
   messages: Message[];
   isLoading: boolean;
   fetchMessages: (noteId: string) => Promise<void>;
-  sendMessage: (noteId: string, content: string) => Promise<void>;
+  sendMessage: (
+    noteId: string,
+    content: string,
+    isSimilarity?: boolean
+  ) => Promise<void>;
 }
 
 export const useMessageStore = create<MessageStore>((set, get) => ({
@@ -30,7 +34,7 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
       set({ isLoading: false });
     }
   },
-  sendMessage: async (noteId, content) => {
+  sendMessage: async (noteId, content, isSimilarity) => {
     set({ isLoading: true });
     if (get().currentNoteId !== noteId) {
       await get().fetchMessages(noteId);
@@ -46,7 +50,11 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
           },
         ],
       }));
-      const response = await postMessage(noteId, { message: content });
+      const response = await postMessage(
+        noteId,
+        { message: content },
+        { isSimilarity }
+      );
       set((state) => ({
         messages: [...state.messages, response.message],
       }));

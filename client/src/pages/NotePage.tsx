@@ -104,8 +104,7 @@ function NotePage() {
     try {
       if (!id) return;
       if (isChecked) {
-        // Include relevant notes API Call
-        console.log("API CALLED");
+        await sendMessage(id, chatInput.trim(), true);
       } else {
         await sendMessage(id, chatInput.trim());
       }
