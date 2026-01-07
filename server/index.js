@@ -10,7 +10,7 @@ const server = http.createServer(app);
 // Connect to MongoDB then start server
 await connectDB();
 
-server.listen(port, "127.0.0.1" () => {
+server.listen(port, "127.0.0.1", () => {
   // eslint-disable-next-line no-console
   console.log(`Server running on port ${port}`);
 });
