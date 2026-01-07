@@ -31,10 +31,16 @@ router.get(
     failureRedirect: `${process.env.CLIENT_URL}/login`,
   }),
   (req, res) => {
-    // Successful authentication, redirect to client
-    res.redirect(
-      `${process.env.CLIENT_URL || "http://localhost:5173"}/dashboard`
-    );
+    // Save session before redirect - CRITICAL for OAuth
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.redirect(`${process.env.CLIENT_URL}/login?error=session`);
+      }
+      res.redirect(
+        `${process.env.CLIENT_URL || "http://localhost:5173"}/dashboard`
+      );
+    });
   }
 );
 

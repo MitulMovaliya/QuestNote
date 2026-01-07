@@ -12,6 +12,9 @@ import logger from "./utils/logger.js";
 
 const app = express();
 
+// Trust proxy - CRITICAL for reverse proxy/nginx/cloudflare
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
