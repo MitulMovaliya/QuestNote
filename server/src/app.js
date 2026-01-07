@@ -19,6 +19,8 @@ app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(morgan("combined", { stream: logger.stream }));
@@ -39,7 +41,9 @@ app.use(
       secure: process.env.NODE_ENV === "production", // HTTPS only in production
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "lax" : "lax", // 'lax' works for same-domain subdomains
+      domain:
+        process.env.NODE_ENV === "production" ? ".mitulmovaliya.me" : undefined, // Share cookie across subdomains
     },
   })
 );
