@@ -35,7 +35,7 @@ interface AuthStore {
   ) => Promise<{ success: boolean; email?: string }>;
 }
 
-const useAuthStore = create<AuthStore>((set, get) => ({
+const useAuthStore = create<AuthStore>((set, _get) => ({
   isAuthenticated: false,
   user: null,
   isLoading: false,
