@@ -12,7 +12,7 @@ function NoteFound() {
       </p>
       <div className="flex items-center gap-4 mt-6">
         <Link
-          to={"/login"}
+          to={"/"}
           type="button"
           className="bg-primary px-7 py-2.5 text-white rounded active:scale-95 transition-all"
         >

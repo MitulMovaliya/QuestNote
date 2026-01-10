@@ -16,6 +16,7 @@ import Tags from "./pages/Tags";
 import Archived from "./pages/Archived";
 import NotePage from "./pages/NotePage";
 import NoteFound from "./pages/NoteFound";
+import HomePage from "./pages/HomePage";
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
         }}
       />
       <Routes>
+        <Route path={PATHS.HOME} element={<HomePage />} />
         <Route
           path={PATHS.LOGIN}
           element={
