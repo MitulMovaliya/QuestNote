@@ -80,7 +80,7 @@ export const messageConversation = async (req, res) => {
               id: id,
               similarity: 1 - similarNote.distances?.[0]?.[index],
               metadata: similarNote.metadatas?.[0]?.[index],
-            };https://github.com/MitulMovaliya/QuestNote/blob/main/server/src/controllers/message.controller.js
+            };
           })
           .filter((item) => item !== null)
           .filter((item) => item.similarity > 0.5);
