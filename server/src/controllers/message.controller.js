@@ -67,6 +67,8 @@ export const messageConversation = async (req, res) => {
         isSimilarity === "true" ||
         isSimilarity === "1";
 
+      const currentNoteContent = String(note.content || "").substring(0, 4000);
+
       let systemInstruction;
       if (shouldUseSimilarity) {
         // Embed the user's actual question for better related-note retrieval.
@@ -110,8 +112,8 @@ export const messageConversation = async (req, res) => {
             relatedNoteTitle = similarNoteData.title;
             similarNoteInstruction = `**Related Note Found:**
 Title: "${similarNoteData.title}"
-Content: ${similarNoteData.content.substring(0, 500)}${
-              similarNoteData.content.length > 500 ? "..." : ""
+Content: ${similarNoteData.content.substring(0, 1200)}${
+              similarNoteData.content.length > 1200 ? "..." : ""
             }
 ${
   similarNoteData.tags?.length > 0
@@ -121,10 +123,13 @@ ${
           }
         }
 
-        systemInstruction = `You are a precise note assistant. Answer questions using ONLY the provided notes.
+        systemInstruction = `You are a precise note assistant. Your only job is to answer from the provided notes.
+
+      If the answer is not in the notes, reply exactly:
+      "I can only answer using your notes. I could not find that in this note context."
 
 **Current Note:** "${note.title}"
-${note.content}
+      ${currentNoteContent}
 ${note.tags?.length > 0 ? `Tags: ${note.tags.join(", ")}` : ""}
 
 ${similarNoteInstruction}
@@ -133,31 +138,38 @@ ${similarNoteInstruction}
 ${conversationHistory}
 
 **Rules:**
-1. Be CONCISE - max 2-3 sentences unless user asks for detail
-2. When referencing content, quote the relevant excerpt briefly so user can verify
-3. Format: Start with direct answer, then cite source if applicable
-4. If using the related note, mention: "From your note '${
+1. Be concise: default max 2-4 short sentences unless user asks for detail
+2. Do not invent facts. Use only text from Current Note and Related Note
+3. Always include one short evidence quote from notes when answering factual questions
+4. Format:
+   - First line: direct answer
+   - Second line: Source quote: "..."
+5. If using the related note, mention: "From your note '${
           relatedNoteTitle || "related note"
         }':"
-5. Use **bold** for key terms only
-6. If question is unrelated to notes, say: "I can only help with your notes. Try asking about [note topic]."
+6. If user asks for greeting/chitchat, keep it brief and redirect to note help
 7. No emojis, no fluff, no repetition`;
       } else {
-        systemInstruction = `You are a precise note assistant. Answer questions using ONLY this note.
+        systemInstruction = `You are a precise note assistant. Your only job is to answer from this note.
+
+If the answer is not in the note, reply exactly:
+"I can only answer using your note. I could not find that in this note."
 
 **Note:** "${note.title}"
-${note.content}
+${currentNoteContent}
 ${note.tags?.length > 0 ? `Tags: ${note.tags.join(", ")}` : ""}
 
 **Conversation:**
 ${conversationHistory}
 
 **Rules:**
-1. Be CONCISE - max 2-3 sentences unless user asks for detail
-2. When referencing content, quote the relevant excerpt briefly so user can verify
-3. Format: Start with direct answer, then cite source: "Your note says: '...'"
-4. Use **bold** for key terms only
-5. If question is unrelated to the note, say: "I can only help with this note. Try asking about ${note.title.toLowerCase()}." 
+1. Be concise: default max 2-4 short sentences unless user asks for detail
+2. Do not invent facts. Use only text from the note
+3. Always include one short evidence quote when answering factual questions
+4. Format:
+   - First line: direct answer
+   - Second line: Source quote: "..."
+5. If question is unrelated to the note, say: "I can only help with this note. Try asking about ${note.title.toLowerCase()}."
 6. No emojis, no fluff, no repetition
 7. For greetings, respond briefly and ask how you can help with the note`;
       }
@@ -184,9 +196,9 @@ ${conversationHistory}
               },
               { role: "user", content: message },
             ],
-            // max_tokens: 150,
-            temperature: 0.3,
-            top_p: 0.9,
+            max_tokens: 220,
+            temperature: 0.2,
+            top_p: 0.8,
           });
           break;
         } catch (modelError) {
