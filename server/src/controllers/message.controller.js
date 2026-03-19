@@ -162,22 +162,51 @@ ${conversationHistory}
 7. For greetings, respond briefly and ask how you can help with the note`;
       }
 
-      const selectedModel =
-        process.env.OPENROUTER_MODEL || "meta-llama/llama-3.1-8b-instruct:free";
+      const configuredModel = process.env.OPENROUTER_MODEL?.trim();
+      const modelCandidates = [
+        configuredModel,
+        "nvidia/nemotron-3-super-120b-a12b:free",
+        "mistralai/mistral-7b-instruct:free",
+        "google/gemini-2.0-flash-exp:free",
+      ].filter(Boolean);
 
-      const openaiResponse = await openai.chat.completions.create({
-        model: selectedModel,
-        messages: [
-          {
-            role: "system",
-            content: systemInstruction,
-          },
-          { role: "user", content: message },
-        ],
-        // max_tokens: 150,
-        temperature: 0.3,
-        top_p: 0.9,
-      });
+      let openaiResponse;
+      let lastModelError;
+
+      for (const modelName of [...new Set(modelCandidates)]) {
+        try {
+          openaiResponse = await openai.chat.completions.create({
+            model: modelName,
+            messages: [
+              {
+                role: "system",
+                content: systemInstruction,
+              },
+              { role: "user", content: message },
+            ],
+            // max_tokens: 150,
+            temperature: 0.3,
+            top_p: 0.9,
+          });
+          break;
+        } catch (modelError) {
+          lastModelError = modelError;
+          const noEndpointFound =
+            modelError?.status === 404 &&
+            String(modelError?.message || "").includes("No endpoints found");
+
+          if (!noEndpointFound) {
+            throw modelError;
+          }
+        }
+      }
+
+      if (!openaiResponse) {
+        throw (
+          lastModelError ||
+          new Error("No available OpenRouter model endpoint was found")
+        );
+      }
 
       const aiResponseText =
         openaiResponse?.choices?.[0]?.message?.content?.trim() ||
