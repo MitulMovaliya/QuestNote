@@ -71,8 +71,8 @@ export const messageConversation = async (req, res) => {
 
       let systemInstruction;
       if (shouldUseSimilarity) {
-        // Embed the user's actual question for better related-note retrieval.
-        const queryEmbedding = await getEmbeddings(message);
+        // Embed the current note's content to find similar notes.
+        const queryEmbedding = await getEmbeddings(currentNoteContent);
 
         const similarNote = await collectionn.query({
           queryEmbeddings: [queryEmbedding],
@@ -123,102 +123,62 @@ ${
           }
         }
 
-        systemInstruction = `You are a precise note assistant. Your only job is to answer from the provided notes.
+        systemInstruction = `Answer only from provided notes. If unable: "I can only answer using your notes. I could not find that in this note context."
 
-      If the answer is not in the notes, reply exactly:
-      "I can only answer using your notes. I could not find that in this note context."
-
-**Current Note:** "${note.title}"
-      ${currentNoteContent}
+Note: "${note.title}"
+${currentNoteContent}
 ${note.tags?.length > 0 ? `Tags: ${note.tags.join(", ")}` : ""}
 
 ${similarNoteInstruction}
 
-**Conversation:**
+Conversation:
 ${conversationHistory}
 
-**Rules:**
-1. Be concise: default max 2-4 short sentences unless user asks for detail
-2. Do not invent facts. Use only text from Current Note and Related Note
-3. Always include one short evidence quote from notes when answering factual questions
-4. Format:
-   - First line: direct answer
-   - Second line: Source quote: "..."
-5. If using the related note, mention: "From your note '${
+1. Be concise (max 2-4 sentences)
+2. Only use text from notes, no invention
+3. Include short evidence quote for factual questions
+4. If using related note: "From your note '${
           relatedNoteTitle || "related note"
         }':"
-6. If user asks for greeting/chitchat, keep it brief and redirect to note help
-7. No emojis, no fluff, no repetition`;
+5. For unrelated questions: redirect to note
+6. No emojis/fluff/repetition`;
       } else {
-        systemInstruction = `You are a precise note assistant. Your only job is to answer from this note.
+        systemInstruction = `Answer only from this note. If unable: "I can only answer using your note. I could not find that in this note."
 
-If the answer is not in the note, reply exactly:
-"I can only answer using your note. I could not find that in this note."
-
-**Note:** "${note.title}"
+Note: "${note.title}"
 ${currentNoteContent}
 ${note.tags?.length > 0 ? `Tags: ${note.tags.join(", ")}` : ""}
 
-**Conversation:**
+Conversation:
 ${conversationHistory}
 
-**Rules:**
-1. Be concise: default max 2-4 short sentences unless user asks for detail
-2. Do not invent facts. Use only text from the note
-3. Always include one short evidence quote when answering factual questions
-4. Format:
-   - First line: direct answer
-   - Second line: Source quote: "..."
-5. If question is unrelated to the note, say: "I can only help with this note. Try asking about ${note.title.toLowerCase()}."
-6. No emojis, no fluff, no repetition
-7. For greetings, respond briefly and ask how you can help with the note`;
+1. Be concise (max 2-4 sentences)
+2. Only use text from note, no invention
+3. Include short evidence quote for factual questions
+4. For unrelated: "I can only help with this note. Ask about ${note.title.toLowerCase()}."
+5. For greetings: respond briefly and offer help
+6. No emojis/fluff/repetition`;
       }
 
-      const configuredModel = process.env.OPENROUTER_MODEL?.trim();
-      const modelCandidates = [
-        configuredModel,
-        "nvidia/nemotron-3-super-120b-a12b:free",
-        "mistralai/mistral-7b-instruct:free",
-        "google/gemini-2.0-flash-exp:free",
-      ].filter(Boolean);
+      console.log(systemInstruction);
 
-      let openaiResponse;
-      let lastModelError;
+      const modelName =
+        process.env.OPENROUTER_MODEL?.trim() ||
+        "arcee-ai/trinity-large-preview:free";
 
-      for (const modelName of [...new Set(modelCandidates)]) {
-        try {
-          openaiResponse = await openai.chat.completions.create({
-            model: modelName,
-            messages: [
-              {
-                role: "system",
-                content: systemInstruction,
-              },
-              { role: "user", content: message },
-            ],
-            max_tokens: 220,
-            temperature: 0.2,
-            top_p: 0.8,
-          });
-          break;
-        } catch (modelError) {
-          lastModelError = modelError;
-          const noEndpointFound =
-            modelError?.status === 404 &&
-            String(modelError?.message || "").includes("No endpoints found");
-
-          if (!noEndpointFound) {
-            throw modelError;
-          }
-        }
-      }
-
-      if (!openaiResponse) {
-        throw (
-          lastModelError ||
-          new Error("No available OpenRouter model endpoint was found")
-        );
-      }
+      const openaiResponse = await openai.chat.completions.create({
+        model: modelName,
+        messages: [
+          {
+            role: "system",
+            content: systemInstruction,
+          },
+          { role: "user", content: message },
+        ],
+        max_tokens: 220,
+        temperature: 0.2,
+        top_p: 0.8,
+      });
 
       const aiResponseText =
         openaiResponse?.choices?.[0]?.message?.content?.trim() ||
