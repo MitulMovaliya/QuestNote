@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PATHS } from "@/config/paths";
 import useAuthStore from "@/stores/auth.store";
-import { Loader2, LockKeyhole, LogIn, Mail } from "lucide-react";
+import { Loader2, LockKeyhole, Mail } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -40,7 +40,7 @@ function Login() {
           <Card className="w-full border-2 border-primary/20 rounded-2xl shadow-lg bg-card/60">
             <CardHeader className="space-y-2 pb-6">
               <div className="p-3 rounded-2xl shadow-md bg-primary mx-auto">
-                <LogIn className="w-7 h-7" />
+                <img src="/logo.png" alt="QuestNote" className="w-10 h-10" />
               </div>
               <CardTitle className="text-center text-3xl">
                 Welcome Back

@@ -2,14 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PATHS } from "@/config/paths";
 import useAuthStore from "@/stores/auth.store";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">(
-    "loading"
+    "loading",
   );
   const [message, setMessage] = useState<string>("");
   const token = searchParams.get("token");
@@ -30,7 +30,7 @@ function VerifyEmail() {
       if (!result.success) {
         setStatus("error");
         setMessage(
-          "Email verification failed. The link may be invalid or expired."
+          "Email verification failed. The link may be invalid or expired.",
         );
       }
     };
@@ -45,7 +45,11 @@ function VerifyEmail() {
           <CardHeader className="space-y-4 pb-6">
             <div className="p-4 rounded-2xl shadow-lg bg-linear-to-br from-primary to-primary/80 mx-auto w-fit">
               {status === "loading" && (
-                <Loader2 className="w-7 h-7 text-primary-foreground animate-spin" />
+                <img
+                  src="/logo.png"
+                  alt="QuestNote"
+                  className="w-7 h-7 animate-pulse"
+                />
               )}
               {status === "success" && (
                 <CheckCircle2 className="w-7 h-7 text-primary-foreground" />

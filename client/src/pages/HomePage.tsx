@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PATHS } from "@/config/paths";
 import {
-  Brain,
   Search,
   Tags,
   MessageSquare,
@@ -11,6 +10,7 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle2,
+  Brain,
 } from "lucide-react";
 
 function HomePage() {
@@ -65,7 +65,7 @@ function HomePage() {
       <nav className="border-b bg-card/60 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center max-w-7xl">
           <div className="flex items-center gap-2">
-            <Brain className="size-8 text-primary" />
+            <img src="/logo.png" alt="QuestNote" className="size-10" />
             <span className="text-2xl font-bold text-primary">QuestNote</span>
           </div>
           <div className="flex gap-3">
@@ -197,8 +197,8 @@ function HomePage() {
         <div className="w-full max-w-7xl mx-auto p-6 md:py-8">
           <div className="sm:flex sm:items-center sm:justify-between">
             <div className="flex items-center mb-4 sm:mb-0 gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Brain className="size-6 text-primary" />
+              <div className="p-2 bg-primary/10 rounded-full">
+                <img src="/logo.png" alt="QuestNote" className="size-10" />
               </div>
               <span className="text-foreground text-2xl font-semibold whitespace-nowrap">
                 QuestNote

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PATHS } from "@/config/paths";
-import { Mail, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 function CheckEmail() {
@@ -38,7 +38,7 @@ function CheckEmail() {
           <CardHeader className="space-y-4 pb-6">
             <div className="relative mx-auto">
               <div className="p-4 rounded-2xl shadow-lg bg-linear-to-br from-primary to-primary/80 mx-auto w-fit">
-                <Mail className="w-7 h-7 text-primary-foreground" />
+                <img src="/logo.png" alt="QuestNote" className="w-7 h-7" />
               </div>
               <CheckCircle2 className="absolute -bottom-1 -right-1 w-6 h-6 text-green-500 bg-card rounded-full" />
             </div>

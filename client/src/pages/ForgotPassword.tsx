@@ -36,7 +36,7 @@ function ForgotPassword() {
           <Card className="w-full border-2 border-primary/20 rounded-2xl shadow-lg bg-card/70">
             <CardHeader className="space-y-4 pb-6">
               <div className="p-4 rounded-2xl shadow-lg bg-linear-to-br from-primary to-primary/80 mx-auto w-fit">
-                <Mail className="w-7 h-7 text-primary-foreground" />
+                <img src="/logo.png" alt="QuestNote" className="w-7 h-7" />
               </div>
               <CardTitle className="text-center text-3xl">
                 Forgot Password?

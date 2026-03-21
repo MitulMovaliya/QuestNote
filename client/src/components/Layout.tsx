@@ -37,7 +37,11 @@ function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className="flex flex-col h-full">
           <div className="p-6 flex items-center justify-between border-b border-sidebar-border">
-            <Link to={PATHS.DASHBOARD} className="text-xl font-bold">
+            <Link
+              to={PATHS.DASHBOARD}
+              className="flex items-center gap-2 text-xl font-bold"
+            >
+              <img src="/logo.png" alt="QuestNote" className="h-8 w-8" />
               QuestNote
             </Link>
             <Button

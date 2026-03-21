@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PATHS } from "@/config/paths";
 import useAuthStore from "@/stores/auth.store";
-import { LockKeyhole, Mail, User, UserPlus } from "lucide-react";
+import { LockKeyhole, Mail, User } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -51,7 +51,7 @@ function Register() {
           <Card className="w-full border-2 border-primary/20 rounded-2xl shadow-lg bg-card/70">
             <CardHeader className="space-y-2 pb-6">
               <div className="p-3 rounded-2xl shadow-md bg-primary mx-auto">
-                <UserPlus className="w-7 h-7" />
+                <img src="/logo.png" alt="QuestNote" className="w-10 h-10" />
               </div>
               <CardTitle className="text-center text-3xl">
                 Create Account
